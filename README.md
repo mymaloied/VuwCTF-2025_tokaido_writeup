@@ -367,7 +367,7 @@ VuwCTF{eastern_sea_route}
 
 ---
 
-**Writeup by: pr1ncipLe
+**Writeup by**: pr1ncipLe
 **Date:** December 2025  
 **CTF:** VuwCTF 2025
 
